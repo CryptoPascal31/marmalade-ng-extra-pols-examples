@@ -1,0 +1,19 @@
+(env-data {"disable-marmalade-v1":true})
+(load "kadena_repl_sandbox/kda-env/init.repl")
+
+(begin-tx)
+(use basic-guards)
+(define-namespace 'marmalade-ng-extra GUARD_SUCCESS GUARD_SUCCESS)
+(namespace 'marmalade-ng-extra)
+(env-data {'extra_examples_keyset:"marmalade-ng-extra.admin",
+           'donation_account:"donation"})
+(load "../pact/policy-extra-currency-whitelist.pact")
+(load "../pact/policy-extra-donation.pact")
+(load "../pact/policy-extra-lottery.pact")
+(load "../pact/policy-extra-multi-sellers.pact")
+(commit-tx)
+
+(typecheck "marmalade-ng-extra.policy-extra-currency-whitelist")
+(typecheck "marmalade-ng-extra.policy-extra-donation")
+(typecheck "marmalade-ng-extra.policy-extra-lottery")
+(typecheck "marmalade-ng-extra.policy-extra-multi-sellers")

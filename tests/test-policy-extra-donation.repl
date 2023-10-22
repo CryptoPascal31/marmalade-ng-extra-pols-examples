@@ -1,0 +1,151 @@
+(env-data {"disable-marmalade-v1":true})
+(load "kadena_repl_sandbox/kda-env/init.repl")
+
+(begin-tx)
+(env-data {'donation-ks:["donation-key"]})
+(coin.create-account "donation" (read-keyset 'donation-ks))
+(commit-tx)
+
+(begin-tx)
+(use basic-guards)
+(define-namespace 'marmalade-ng-extra GUARD_SUCCESS GUARD_SUCCESS)
+(namespace 'marmalade-ng-extra)
+(env-data {'extra_examples_keyset:"marmalade-ng-extra.admin",
+          'donation_account:"donation" })
+(load "../pact/policy-extra-donation.pact")
+(create-table tokens)
+(create-table sales)
+(commit-tx)
+
+(begin-tx)
+(use marmalade-ng.policy-extra-policies)
+(register-policy marmalade-ng-extra.policy-extra-donation)
+(commit-tx)
+
+(begin-tx)
+(use marmalade-ng.ledger)
+(use marmalade-ng.std-policies)
+(use free.util-strings)
+
+
+(env-data {'tmp-ks:["tmp-key"],
+           'creator-ks:["creator-key"],
+           'alice-ks:["alice-key"],
+           'marmalade_extra_policies:{'guard:{'pred:"keys-all",
+                                              'keys:["creator-key"]}}
+         })
+(env-sigs [{'key:"tmp-key", 'caps:[(ENFORCE-RESERVED)]}])
+
+(print (+ "Token ID: => " (create-token-id (read-keyset 'tmp-ks) "http://token-1")))
+
+
+(create-token "t:o6cU4WKpqH0YqsiIeliy-bYXyAfyKkLCU36QN9LRwT8" 0 "http://token-1"
+              (to-policies "INSTANT-MINT DISABLE-BURN FIXED-SALE EXTRA-POLICIES" )
+              (read-keyset 'tmp-ks))
+
+(mint "t:o6cU4WKpqH0YqsiIeliy-bYXyAfyKkLCU36QN9LRwT8" "alice" (read-keyset 'alice-ks) 3.0)
+(commit-tx)
+
+(begin-tx)
+(env-sigs [{'key:"creator-key", 'caps:[]}])
+
+(marmalade-ng-extra.policy-extra-donation.enable "t:o6cU4WKpqH0YqsiIeliy-bYXyAfyKkLCU36QN9LRwT8")
+(commit-tx)
+ 
+(begin-tx)
+(env-hash (hash "test-sale-1"))
+(print (format "Sale ID 1: => {}" [(tx-hash)]))
+(use marmalade-ng.ledger)
+
+(env-data {'marmalade_sale: {'sale_type:"fixed", 'currency:coin },
+           'marmalade_fixed_quote: {'recipient:"alice", 'price:5.0 }})
+
+(env-sigs [{'key:"alice-key", 'caps:[(OFFER "t:o6cU4WKpqH0YqsiIeliy-bYXyAfyKkLCU36QN9LRwT8" "alice" 1.0)]}])
+
+(sale "t:o6cU4WKpqH0YqsiIeliy-bYXyAfyKkLCU36QN9LRwT8" "alice" 1.0 NO-TIMEOUT)
+(commit-tx)
+
+(begin-tx)
+(env-data {'buyer:"bob", 'buyer-guard:{'pred:"keys-all", 'keys:["bob-key"]}})
+(env-sigs [{'key:"bob-key", 'caps:[(coin.TRANSFER "bob" "c:OjbsLeT3tYzsi-VFRtKMaG9SifW2an9nN0xsri9Me-U" 5.0)]}])
+(env-chain-data {"block-time": (time "2023-05-01T00:00:00Z")})
+
+(env-events true)
+(continue-pact 1 false (hash  "test-sale-1"))
+
+(expect "Final balance should be 1004.9" 1004.9 (coin.get-balance "alice"))
+(expect "Final balance should be 995" 995.0 (coin.get-balance "bob"))
+(expect "Final balance should be 0.1" 0.1 (coin.get-balance "donation"))
+(commit-tx)
+
+(begin-tx)
+(env-sigs [{'key:"creator-key", 'caps:[]}])
+
+(marmalade-ng-extra.policy-extra-donation.disable "t:o6cU4WKpqH0YqsiIeliy-bYXyAfyKkLCU36QN9LRwT8")
+(commit-tx)
+
+
+(begin-tx)
+(env-hash (hash "test-sale-2"))
+(print (format "Sale ID 2: => {}" [(tx-hash)]))
+(use marmalade-ng.ledger)
+
+(env-data {'marmalade_sale: {'sale_type:"fixed", 'currency:coin },
+           'marmalade_fixed_quote: {'recipient:"alice", 'price:5.0 }})
+
+(env-sigs [{'key:"alice-key", 'caps:[(OFFER "t:o6cU4WKpqH0YqsiIeliy-bYXyAfyKkLCU36QN9LRwT8" "alice" 1.0)]}])
+
+(sale "t:o6cU4WKpqH0YqsiIeliy-bYXyAfyKkLCU36QN9LRwT8" "alice" 1.0 NO-TIMEOUT)
+(commit-tx)
+
+(begin-tx)
+(env-data {'buyer:"bob", 'buyer-guard:{'pred:"keys-all", 'keys:["bob-key"]}})
+(env-sigs [{'key:"bob-key", 'caps:[(coin.TRANSFER "bob" "c:rYL4z186huOx9VSyKV8kcMqMPLooV8_zm7EyEraIXKI" 5.0)]}])
+(env-chain-data {"block-time": (time "2023-05-01T00:00:00Z")})
+
+(env-events true)
+(continue-pact 1 false (hash  "test-sale-2"))
+
+(expect "Final balance should be 1009.9" 1009.9 (coin.get-balance "alice"))
+(expect "Final balance should be 990" 990.0 (coin.get-balance "bob"))
+(expect "Final balance should be 0.1" 0.1 (coin.get-balance "donation"))
+(commit-tx)
+
+
+(begin-tx)
+(env-sigs [{'key:"creator-key", 'caps:[]}])
+
+(marmalade-ng-extra.policy-extra-donation.enable "t:o6cU4WKpqH0YqsiIeliy-bYXyAfyKkLCU36QN9LRwT8")
+(marmalade-ng.policy-extra-policies.add-to-blacklist  "t:o6cU4WKpqH0YqsiIeliy-bYXyAfyKkLCU36QN9LRwT8"
+  marmalade-ng-extra.policy-extra-donation)
+(commit-tx)
+
+
+(begin-tx)
+(env-hash (hash "test-sale-3"))
+(print (format "Sale ID 3: => {}" [(tx-hash)]))
+(use marmalade-ng.ledger)
+
+(env-data {'marmalade_sale: {'sale_type:"fixed", 'currency:coin },
+           'marmalade_fixed_quote: {'recipient:"alice", 'price:5.0 }
+         })
+
+(env-sigs [{'key:"alice-key", 'caps:[(OFFER "t:o6cU4WKpqH0YqsiIeliy-bYXyAfyKkLCU36QN9LRwT8" "alice" 1.0)]}])
+
+(sale "t:o6cU4WKpqH0YqsiIeliy-bYXyAfyKkLCU36QN9LRwT8" "alice" 1.0 NO-TIMEOUT)
+(commit-tx)
+
+(begin-tx)
+(env-data {'buyer:"bob", 'buyer-guard:{'pred:"keys-all", 'keys:["bob-key"]}})
+(env-sigs [{'key:"bob-key", 'caps:[(coin.TRANSFER "bob" "c:Y3tVnYOs_QvKrf87RZ-Kh8oD4FAQ6P8ElcqDBEb23Jc" 5.0)]}])
+(env-chain-data {"block-time": (time "2023-05-01T00:00:00Z")})
+
+(env-events true)
+(continue-pact 1 false (hash  "test-sale-3"))
+
+(expect "Final balance should be 1009.9" 1014.9 (coin.get-balance "alice"))
+(expect "Final balance should be 990" 985.0 (coin.get-balance "bob"))
+(expect "Final balance should be 0.1" 0.1 (coin.get-balance "donation"))
+(commit-tx)
+
+;{]}

@@ -1,0 +1,105 @@
+(env-data {"disable-marmalade-v1":true})
+(load "kadena_repl_sandbox/kda-env/init.repl")
+;{[}
+
+
+(begin-tx)
+(use basic-guards)
+(define-namespace 'marmalade-ng-extra GUARD_SUCCESS GUARD_SUCCESS)
+(namespace 'marmalade-ng-extra)
+(env-data {'extra_examples_keyset:"marmalade-ng-extra.admin"})
+(load "../pact/policy-extra-lottery.pact")
+(create-table sales)
+(commit-tx)
+
+(begin-tx)
+(use marmalade-ng.policy-extra-policies)
+(register-policy marmalade-ng-extra.policy-extra-lottery)
+(commit-tx)
+
+(begin-tx)
+(use marmalade-ng.ledger)
+(use marmalade-ng.std-policies)
+(use free.util-strings)
+
+
+(env-data {'tmp-ks:["tmp-key"],
+           'creator-ks:["creator-key"],
+           'alice-ks:["alice-key"],
+           'marmalade_extra_policies:{'guard:{'pred:"keys-all",
+                                              'keys:["creator-key"]}}
+         })
+(env-sigs [{'key:"tmp-key", 'caps:[(ENFORCE-RESERVED)]}])
+
+(print (+ "Token ID: => " (create-token-id (read-keyset 'tmp-ks) "http://token-1")))
+
+
+(create-token "t:o6cU4WKpqH0YqsiIeliy-bYXyAfyKkLCU36QN9LRwT8" 0 "http://token-1"
+              (to-policies "INSTANT-MINT DISABLE-BURN FIXED-SALE EXTRA-POLICIES" )
+              (read-keyset 'tmp-ks))
+
+(mint "t:o6cU4WKpqH0YqsiIeliy-bYXyAfyKkLCU36QN9LRwT8" "alice" (read-keyset 'alice-ks) 3.0)
+(commit-tx)
+
+(begin-tx)
+(env-hash (hash "lottery-1"))
+(print (format "Sale ID 1: => {}" [(tx-hash)]))
+(use marmalade-ng.ledger)
+
+(env-data {'marmalade_sale: {'sale_type:"lottery", 'currency:coin },
+           'marmalade_lottery: {'recipient:"alice", 'ticket_price:1.0 }
+         })
+
+(env-sigs [{'key:"alice-key", 'caps:[(OFFER "t:o6cU4WKpqH0YqsiIeliy-bYXyAfyKkLCU36QN9LRwT8" "alice" 1.0)]}])
+(env-chain-data {"block-time": (time "2023-01-01T00:00:00Z")})
+
+(sale "t:o6cU4WKpqH0YqsiIeliy-bYXyAfyKkLCU36QN9LRwT8" "alice" 1.0 (time "2023-06-01T00:00:00Z"))
+(commit-tx)
+
+
+;; BUY TICKET
+(begin-tx)
+(use marmalade-ng-extra.policy-extra-lottery)
+(env-sigs [{'key:"bob-key", 'caps:[(coin.TRANSFER "bob" "c:Ttq_N96OXbGg84Z2K89A8mjyM78srZAo9oX4mXGfXF8" 1.0)]}])
+(env-chain-data {"block-time": (time "2023-02-01T00:00:00Z")})
+(buy-ticket (hash "lottery-1") "bob")
+(commit-tx)
+
+(begin-tx)
+(use marmalade-ng-extra.policy-extra-lottery)
+(env-sigs [{'key:"carol-key", 'caps:[(coin.TRANSFER "carol" "c:Ttq_N96OXbGg84Z2K89A8mjyM78srZAo9oX4mXGfXF8" 1.0)]}])
+(env-chain-data {"block-time": (time "2023-02-01T00:00:00Z")})
+(buy-ticket (hash "lottery-1") "carol")
+(commit-tx)
+
+(begin-tx)
+(use marmalade-ng-extra.policy-extra-lottery)
+(env-sigs [{'key:"dave-key", 'caps:[(coin.TRANSFER "dave" "c:Ttq_N96OXbGg84Z2K89A8mjyM78srZAo9oX4mXGfXF8" 1.0)]}])
+(env-chain-data {"block-time": (time "2023-02-01T00:00:00Z")})
+(buy-ticket (hash "lottery-1") "dave")
+(commit-tx)
+
+;; DRAW
+(begin-tx)
+(use marmalade-ng-extra.policy-extra-lottery)
+(env-hash (hash "Draw transaction"))
+(env-chain-data {"block-time": (time "2023-06-01T01:00:00Z")})
+(draw (hash "lottery-1"))
+
+(print (format "Winner:{}" [(at 'winner (get-lottery (hash "lottery-1")))]))
+(commit-tx)
+
+
+; Winner seems being dave
+(begin-tx)
+(env-data {'buyer:"dave", 'buyer-guard:{'pred:"keys-all", 'keys:["dave-key"]}})
+(env-chain-data {"block-time": (time "2023-06-01T01:00:00Z")})
+
+(env-events true)
+(continue-pact 1 false (hash "lottery-1"))
+
+(expect "Final balance should be 1003.0" 1003.0 (coin.get-balance "alice"))
+(expect "Final balance should be 994" 999.0 (coin.get-balance "bob"))
+(expect "Final balance should be 1002.0" 999.0 (coin.get-balance "carol"))
+(expect "Final balance should be 1002.0" 999.0 (coin.get-balance "dave"))
+(commit-tx)
