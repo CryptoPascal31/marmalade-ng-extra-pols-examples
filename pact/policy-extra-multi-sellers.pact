@@ -28,6 +28,14 @@
   (deftable sales:{multi-sellers-sch})
 
   ;-----------------------------------------------------------------------------
+  ; Capabilities and events
+  ;-----------------------------------------------------------------------------
+  (defcap MULTI-SELLERS-OFFER (accounts:[string])
+    @event
+    true
+  )
+
+  ;-----------------------------------------------------------------------------
   ; Input data
   ;-----------------------------------------------------------------------------
   (defschema multi-sellers-msg-sch
@@ -74,6 +82,7 @@
           (bind (enforce-read-sale-msg token) {'currency:=currency}
             (map (check-fungible-account currency) accounts)
             (insert sales (pact-id) {'dest-accounts:accounts, 'currency:currency})
+            (emit-event (MULTI-SELLERS-OFFER accounts))
             false)))
   )
 
