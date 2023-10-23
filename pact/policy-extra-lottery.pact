@@ -1,9 +1,9 @@
 (module policy-extra-lottery GOVERNANCE
-  (implements marmalade-ng.token-policy-ng-v1)
-  (use marmalade-ng.token-policy-ng-v1 [token-info])
-  (use marmalade-ng.ledger [NO-TIMEOUT escrow escrow-guard])
-  (use marmalade-ng.policy-extra-policies)
-  (use marmalade-ng.util-policies)
+  (implements __MARMALADE_NG_NS__.token-policy-ng-v1)
+  (use __MARMALADE_NG_NS__.token-policy-ng-v1 [token-info])
+  (use __MARMALADE_NG_NS__.ledger [NO-TIMEOUT escrow escrow-guard])
+  (use __MARMALADE_NG_NS__.policy-extra-policies)
+  (use __MARMALADE_NG_NS__.util-policies)
   (use free.util-lists)
   (use free.util-math)
   (use free.util-time)
@@ -222,13 +222,14 @@
   )
 
   (defun draw:string (sale-id:string)
-    ;;; WARNING UNSAFE FUNCTION SHOULD BE FED BY AN ORACLE
+    ;;; WARNING UNSAFE FUNCTION SHOULD BE FED BY A TRUSTED ORACLE
     (enforce-after-timeout sale-id)
     (with-read sales sale-id {'token-id:=token-id,
                               'tickets-bought:=tickets,
                               'winner:=current-winner}
       (enforce (= "" current-winner) "Lottery already drawn")
-      (let* ((rnd-number (if (is-singleton tickets) 0 (random-int-range 0 (-- (length tickets)))))
+      (let* ((rnd-number (if (is-singleton tickets) 0
+                             (random-int-range 0 (-- (length tickets)))))
              (winner (at rnd-number tickets)))
         (update sales sale-id {'winner: winner })
         (emit-event (DRAWN sale-id token-id rnd-number winner))

@@ -12,7 +12,7 @@
 (namespace 'marmalade-ng-extra)
 (env-data {"admin_keyset":"marmalade-ng-extra.admin",
           'donation_account:"donation" })
-(load "../pact/policy-extra-donation.pact")
+(load ".modules/policy-extra-donation.pact")
 (create-table tokens)
 (create-table sales)
 (commit-tx)

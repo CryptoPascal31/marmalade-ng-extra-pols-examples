@@ -1,8 +1,8 @@
 (module policy-extra-currency-whitelist GOVERNANCE
-  (implements marmalade-ng.token-policy-ng-v1)
-  (use marmalade-ng.token-policy-ng-v1 [token-info])
-  (use marmalade-ng.policy-extra-policies)
-  (use marmalade-ng.util-policies)
+  (implements __MARMALADE_NG_NS__.token-policy-ng-v1)
+  (use __MARMALADE_NG_NS__.token-policy-ng-v1 [token-info])
+  (use __MARMALADE_NG_NS__.policy-extra-policies)
+  (use __MARMALADE_NG_NS__.util-policies)
   (use free.util-strings)
   (use free.util-lists)
 

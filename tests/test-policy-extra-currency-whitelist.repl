@@ -6,7 +6,7 @@
 (define-namespace 'marmalade-ng-extra GUARD_SUCCESS GUARD_SUCCESS)
 (namespace 'marmalade-ng-extra)
 (env-data {"admin_keyset":"marmalade-ng-extra.admin"})
-(load "../pact/policy-extra-currency-whitelist.pact")
+(load ".modules/policy-extra-currency-whitelist.pact")
 (create-table whitelists)
 (commit-tx)
 

@@ -7,10 +7,10 @@
 (namespace 'marmalade-ng-extra)
 (env-data {'admin_keyset:"marmalade-ng-extra.admin",
            'donation_account:"donation"})
-(load "../pact/policy-extra-currency-whitelist.pact")
-(load "../pact/policy-extra-donation.pact")
-(load "../pact/policy-extra-lottery.pact")
-(load "../pact/policy-extra-multi-sellers.pact")
+(load ".modules/policy-extra-currency-whitelist.pact")
+(load ".modules/policy-extra-donation.pact")
+(load ".modules/policy-extra-lottery.pact")
+(load ".modules/policy-extra-multi-sellers.pact")
 (commit-tx)
 
 (typecheck "marmalade-ng-extra.policy-extra-currency-whitelist")
