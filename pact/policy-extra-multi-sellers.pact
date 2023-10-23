@@ -98,10 +98,10 @@
                                 'currency:=currency:module{fungible-v2}}
 
         (let* ((escrow (escrow))
-               (to-pay (floor (/ (currency::get-balance escrow)
-                                 (dec (++ (length accounts))))
+               (total-balance (currency::get-balance escrow))
+               (to-pay (floor (/ total-balance (dec (++ (length accounts))))
                               (currency::precision))))
-          (map (lambda (x) (install-capability (currency::TRANSFER escrow x to-pay)))
+          (map (lambda (x) (install-capability (currency::TRANSFER escrow x total-balance)))
                 accounts)
           (map (lambda (x) (currency::transfer escrow x to-pay))
                accounts)
