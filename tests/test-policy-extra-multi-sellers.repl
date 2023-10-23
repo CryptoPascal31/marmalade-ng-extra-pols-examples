@@ -7,7 +7,7 @@
 (use basic-guards)
 (define-namespace 'marmalade-ng-extra GUARD_SUCCESS GUARD_SUCCESS)
 (namespace 'marmalade-ng-extra)
-(env-data {'extra_examples_keyset:"marmalade-ng-extra.admin"})
+(env-data {"admin_keyset":"marmalade-ng-extra.admin"})
 (load "../pact/policy-extra-multi-sellers.pact")
 (create-table sales)
 (commit-tx)

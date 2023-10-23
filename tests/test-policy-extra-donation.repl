@@ -10,7 +10,7 @@
 (use basic-guards)
 (define-namespace 'marmalade-ng-extra GUARD_SUCCESS GUARD_SUCCESS)
 (namespace 'marmalade-ng-extra)
-(env-data {'extra_examples_keyset:"marmalade-ng-extra.admin",
+(env-data {"admin_keyset":"marmalade-ng-extra.admin",
           'donation_account:"donation" })
 (load "../pact/policy-extra-donation.pact")
 (create-table tokens)
@@ -51,7 +51,7 @@
 
 (marmalade-ng-extra.policy-extra-donation.enable "t:o6cU4WKpqH0YqsiIeliy-bYXyAfyKkLCU36QN9LRwT8")
 (commit-tx)
- 
+
 (begin-tx)
 (env-hash (hash "test-sale-1"))
 (print (format "Sale ID 1: => {}" [(tx-hash)]))
