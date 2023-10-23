@@ -1,0 +1,8 @@
+admin: n_b402dc44ff03a3bae3b434f25c1802297026f6b3.admin
+admin-key: 35281df36994281de3260fa693e55e1fb38c76960a0449bf3285b19aebddbc1a
+chain: "1"
+donation-account: r:user.marmalade-ng-donation
+gas-payer: k:a354ebe134adf311dc31b91b288d09fea7f1974e4dc4f4f7ebff2b5648aae25b
+gas-payer-key: a354ebe134adf311dc31b91b288d09fea7f1974e4dc4f4f7ebff2b5648aae25b
+namespace-key: 947ce07222725cead94b8f4cf788b9c4f51fa27ab7a080d1ed79abecf425ca44
+network: testnet04
